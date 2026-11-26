@@ -5,7 +5,7 @@
 
 # Bước 1: Chọn base image
 # python:3.11 = full Python distribution (~1 GB)
-FROM python:3.11
+FROM public.ecr.aws/docker/library/python:3.11
 
 # Bước 2: Đặt working directory trong container
 WORKDIR /app

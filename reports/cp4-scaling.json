@@ -1,0 +1,76 @@
+{
+  "checkpoint": "CP4",
+  "part": "Part 5 — Scaling & Reliability",
+  "develop_verification": {
+    "port": 18105,
+    "health": {
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "uptime_seconds": 0.3,
+        "version": "1.0.0",
+        "environment": "development",
+        "timestamp": "2026-11-26T08:18:16.040158+00:00",
+        "checks": {
+          "memory": {
+            "status": "ok",
+            "used_percent": 22.8
+          }
+        }
+      }
+    },
+    "ready": {
+      "status": 200,
+      "body": {
+        "ready": true,
+        "in_flight_requests": 1
+      }
+    },
+    "graceful_shutdown": {
+      "request": "POST /ask?question=Long%20task",
+      "sigterm_sent_after_s": 0.5,
+      "ask_http_status": 200,
+      "ask_elapsed_s": 3.05,
+      "shutdown_elapsed_after_sigterm_s": 2.76,
+      "server_exit_code": 0
+    }
+  },
+  "production_scaling": {
+    "compose_project": "k5-day14-scaling",
+    "endpoint_base": "http://localhost:8080",
+    "containers": {
+      "agent_1": {"name": "k5-day14-scaling-agent-1", "instance_id": "instance-e3dd5f", "health": "healthy", "storage": "redis"},
+      "agent_2": {"name": "k5-day14-scaling-agent-2", "instance_id": "instance-babf6a", "health": "healthy", "storage": "redis"},
+      "agent_3": {"name": "k5-day14-scaling-agent-3", "instance_id": "instance-39834c", "health": "healthy", "storage": "redis"},
+      "redis": {"name": "k5-day14-scaling-redis-1", "health": "healthy"},
+      "nginx": {"name": "k5-day14-scaling-nginx-1", "ports": "8080->80"}
+    },
+    "health_via_nginx": {
+      "status": 200,
+      "x_served_by": "172.22.0.4:8000",
+      "instance_id": "instance-39834c",
+      "storage": "redis",
+      "redis_connected": true
+    },
+    "ready_via_nginx": {
+      "status": 200,
+      "x_served_by": "172.22.0.5:8000",
+      "instance": "instance-babf6a",
+      "ready": true
+    },
+    "test_stateless": {
+      "session_id": "ed3376da-d965-423b-9caa-2e88e0ec8c3c",
+      "requests": [
+        {"index": 1, "served_by": "instance-e3dd5f", "question": "What is Docker?"},
+        {"index": 2, "served_by": "instance-39834c", "question": "Why do we need containers?"},
+        {"index": 3, "served_by": "instance-babf6a", "question": "What is Kubernetes?"},
+        {"index": 4, "served_by": "instance-e3dd5f", "question": "How does load balancing work?"},
+        {"index": 5, "served_by": "instance-39834c", "question": "What is Redis used for?"}
+      ],
+      "unique_instances_seen": ["instance-e3dd5f", "instance-39834c", "instance-babf6a"],
+      "history_message_count": 10,
+      "kills_instance": false
+    },
+    "cleanup": "docker compose -p k5-day14-scaling down completed"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "develop": {
+    "missing_auth": {
+      "status": 401,
+      "curl_i_output": "HTTP/1.1 401 Unauthorized\ndate: Thu, 26 Nov 2026 08:10:31 GMT\nserver: uvicorn\ncontent-length: 67\ncontent-type: application/json\n\n{\"detail\":\"Missing API key. Include header: X-API-Key: <your-key>\"}"
+    },
+    "wrong_key": {
+      "status": 403,
+      "curl_i_output": "HTTP/1.1 403 Forbidden\ndate: Thu, 26 Nov 2026 08:10:31 GMT\nserver: uvicorn\ncontent-length: 29\ncontent-type: application/json\n\n{\"detail\":\"Invalid API key.\"}"
+    },
+    "correct_key": {
+      "status": 200,
+      "curl_i_output": "HTTP/1.1 200 OK\ndate: Thu, 26 Nov 2026 08:10:31 GMT\nserver: uvicorn\ncontent-length: 122\ncontent-type: application/json\n\n{\"question\":\"Hello\",\"answer\":\"Tôi là AI agent được deploy lên cloud. Câu hỏi của bạn đã được nhận.\"}"
+    }
+  },
+  "production": {
+    "missing_auth": {
+      "status": 401,
+      "curl_i_output": "HTTP/1.1 401 Unauthorized\ndate: Thu, 26 Nov 2026 08:10:32 GMT\nserver: uvicorn\nwww-authenticate: Bearer\ncontent-length: 76\ncontent-type: application/json\nvary: Origin\nx-content-type-options: nosniff\nx-frame-options: DENY\nx-xss-protection: 1; mode=block\nreferrer-policy: strict-origin-when-cross-origin\n\n{\"detail\":\"Authentication required. Include: Authorization: Bearer <token>\"}"
+    },
+    "login": {
+      "status": 200,
+      "token_type": "bearer",
+      "expires_in_minutes": 60,
+      "access_token": "[REDACTED]"
+    },
+    "invalid_token": {
+      "status": 403,
+      "curl_i_output": "HTTP/1.1 403 Forbidden\ndate: Thu, 26 Nov 2026 08:10:32 GMT\nserver: uvicorn\ncontent-length: 27\ncontent-type: application/json\nvary: Origin\nx-content-type-options: nosniff\nx-frame-options: DENY\nx-xss-protection: 1; mode=block\nreferrer-policy: strict-origin-when-cross-origin\n\n{\"detail\":\"Invalid token.\"}"
+    },
+    "rate_requests": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      429,
+      429,
+      429,
+      429,
+      429,
+      429,
+      429,
+      429,
+      429,
+      429
+    ],
+    "correct_token": {
+      "status": 200,
+      "curl_i_output": "HTTP/1.1 200 OK\ndate: Thu, 26 Nov 2026 08:10:32 GMT\nserver: uvicorn\ncontent-length: 187\ncontent-type: application/json\nvary: Origin\nx-content-type-options: nosniff\nx-frame-options: DENY\nx-xss-protection: 1; mode=block\nreferrer-policy: strict-origin-when-cross-origin\n\n{\"question\":\"Test 1\",\"answer\":\"Tôi là AI agent được deploy lên cloud. Câu hỏi của bạn đã được nhận.\",\"usage\":{\"requests_remaining\":9,\"budget_remaining_usd\":1.9e-05}}"
+    },
+    "first_429": {
+      "status": 429,
+      "curl_i_output": "HTTP/1.1 429 Too Many Requests\ndate: Thu, 26 Nov 2026 08:10:33 GMT\nserver: uvicorn\nx-ratelimit-limit: 10\nx-ratelimit-remaining: 0\nx-ratelimit-reset: 1795680693\nretry-after: 59\ncontent-length: 98\ncontent-type: application/json\nvary: Origin\nx-content-type-options: nosniff\nx-frame-options: DENY\nx-xss-protection: 1; mode=block\nreferrer-policy: strict-origin-when-cross-origin\n\n{\"detail\":{\"error\":\"Rate limit exceeded\",\"limit\":10,\"window_seconds\":60,\"retry_after_seconds\":59}}"
+    },
+    "admin_denied": {
+      "status": 403,
+      "curl_i_output": "HTTP/1.1 403 Forbidden\ndate: Thu, 26 Nov 2026 08:10:33 GMT\nserver: uvicorn\ncontent-length: 23\ncontent-type: application/json\nvary: Origin\nx-content-type-options: nosniff\nx-frame-options: DENY\nx-xss-protection: 1; mode=block\nreferrer-policy: strict-origin-when-cross-origin\n\n{\"detail\":\"Admin only\"}"
+    },
+    "usage": {
+      "status": 200,
+      "curl_i_output": "HTTP/1.1 200 OK\ndate: Thu, 26 Nov 2026 08:10:33 GMT\nserver: uvicorn\ncontent-length: 184\ncontent-type: application/json\nvary: Origin\nx-content-type-options: nosniff\nx-frame-options: DENY\nx-xss-protection: 1; mode=block\nreferrer-policy: strict-origin-when-cross-origin\n\n{\"user_id\":\"student\",\"date\":\"2026-11-26\",\"requests\":10,\"input_tokens\":40,\"output_tokens\":292,\"cost_usd\":0.000181,\"budget_usd\":1.0,\"budget_remaining_usd\":0.999819,\"budget_used_pct\":0.0}"
+    }
+  },
+  "cost_guard_function_check": {
+    "configured_budget_usd": 1e-06,
+    "synthetic_input_tokens": 10,
+    "synthetic_output_tokens": 10,
+    "recorded_cost_usd": 7e-06,
+    "exception_status": 402
+  },
+  "production_dependency_versions": {
+    "fastapi": "0.165.0",
+    "pydantic": "2.14.4",
+    "pyjwt": "2.15.1",
+    "uvicorn": "0.54.0"
+  }
+}
