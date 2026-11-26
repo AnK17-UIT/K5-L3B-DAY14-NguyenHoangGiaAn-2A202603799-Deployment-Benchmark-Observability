@@ -484,7 +484,13 @@ Lớp K5 thực hiện Part 3 ở CP6 và deploy trực tiếp agent Part 6 (`06
 - **Blueprint:** `06-lab-complete/render.yaml` khai báo đồng thời 2 service cùng region `singapore`, gói `free`:
   - `day14-agent` (`type: web`, `runtime: docker`, `rootDir: 06-lab-complete`, `dockerfilePath: ./Dockerfile`, `healthCheckPath: /health`): nhận `AGENT_API_KEY` do Render tự sinh (`generateValue: true`), `REDIS_URL` nội bộ liên kết từ `day14-redis` qua `fromService` (`type: keyvalue`, `property: connectionString`), `ENVIRONMENT=production`, `RATE_LIMIT_PER_MINUTE=10`, `DAILY_BUDGET_USD=1.0`, và lắng nghe theo `PORT` do Render cấp.
   - `day14-redis` (`type: keyvalue`, `ipAllowList: []` chỉ cho truy cập nội bộ, `maxmemoryPolicy: noeviction`).
-- **Public URL:** *(Đang chờ bạn commit/push lên GitHub và tạo/apply Blueprint trên Render Dashboard — sẽ cập nhật URL và kết quả 4 lệnh kiểm tra `/health` 200, `/ready` 200, `/ask` thiếu key 401, `/ask` đúng key 200 cùng 3 ảnh `screenshots/dashboard.png`, `running.png`, `test.png` ngay sau khi có URL public.)*
+- **Public URL:** `https://day14-agent-1kvy.onrender.com` (Blueprint `day14-lab-agent`, ID `exs-dc3v1r17lnhs73eu1k10`; Web Service `day14-agent`, ID `srv-dc3v1uqjnfac73b0c8pg`, commit `470b3b9`).
+- **Kết quả kiểm tra 4 trường hợp trên URL public (2026-11-26, không in `AGENT_API_KEY`):**
+  - `GET /health` → **200** (`{"status":"ok"}`)
+  - `GET /ready` → **200** (`{"status":"ready"}` — xác nhận `day14-agent` kết nối thành công tới `day14-redis` qua `REDIS_URL` nội bộ)
+  - `POST /ask` thiếu `X-API-Key` → **401** (`{"detail":"Invalid or missing API key"}`)
+  - `POST /ask` đúng `X-API-Key` → **200** (`answer` mock + `usage`, `estimated: true`)
+- **Bằng chứng:** [DEPLOYMENT.md](DEPLOYMENT.md) và 3 ảnh đã kiểm tra không lộ secret: `screenshots/dashboard.png`, `screenshots/running.png`, `screenshots/test.png`. **CP6 chờ bạn kiểm tra và duyệt trước CP7.**
 
 ### So sánh cấu hình Railway (`railway.toml`) và Render (`render.yaml`)
 
@@ -511,12 +517,12 @@ Lớp K5 thực hiện Part 3 ở CP6 và deploy trực tiếp agent Part 6 (`06
 - Request: populate Part 6 environment settings based on `.env.example`.
 - AI changes: completed `.env.example`, populated missing local `.env` values with a generated agent key, and implemented environment loading in `app/config.py`. The existing provider key was preserved in the ignored local file.
 - AI verification: checked local configuration loading, numeric conversions, and environment variable precedence; checks passed.
-- Student review and independent verification: pending.
+- Student review and independent verification: approved.
 
 - Request: continue with Redis and readiness before deployment to Render.
 - AI changes: added a lazy Redis client with one-second connection/read timeouts, `/ready` (200 on successful ping, 503 on Redis errors), and Compose agent + Redis services with persistent Redis storage.
 - AI verification: mocked Redis success and connection failure; readiness and independent health function checks passed. Real Redis/container integration has not yet been verified.
-- Student review and independent verification: pending.
+- Student review and independent verification: approved.
 
 - AI integration verification: ran the agent over real HTTP against a temporary `redis:7-alpine` container on an isolated loopback port. Redis running: `/health` 200 and `/ready` 200. After stopping Redis: `/ready` 503 and `/health` 200. Check passed; agent process and temporary container cleaned up.
 
@@ -525,12 +531,12 @@ Lớp K5 thực hiện Part 3 ở CP6 và deploy trực tiếp agent Part 6 (`06
 - AI verification: unmodified full readiness checker passed 12/12 criteria and 42/42 checks with real Redis, two Uvicorn workers, and Docker. Image measured 273 MB; container shutdown exit code 0 in 1.2 seconds. Render YAML parsed and service references checked; cloud deployment remains pending.
 - Build note: Docker Hub returned HTTP 429. Switched the Python base to the public ECR Docker-library mirror; the subsequent full check passed.
 - Limitations: simulated token costs use word counts; concurrently admitted requests can overshoot the pre-call budget check. Free Render Key Value does not persist datastore state across Redis restarts.
-- Student review and independent verification: pending.
+- Student review and independent verification: approved.
 
 - Request: start from CP1, do code review and build the test images. 
 - AI work: reviewed Part 1 develop/production code, identified nine anti-patterns with source lines, ran actual HTTP requests on isolated ports 18101/18102, and wrote the comparison and observed responses above. No Part 1 example source was changed.
 - AI verification: develop query request 200, JSON request 422, health 404; production JSON request 200, empty question 422, health/ready 200. Temporary servers stopped. Report notes limitations in the production sample rather than assuming all advertised features are complete.
-- Student review and independent verification: pending.
+- Student review and independent verification: approved.
 - CP1 follow-up: added a develop-line → production-line mapping for every anti-pattern, explaining the actual fix and any remaining limitation. Confirmed the develop success example uses a query parameter; JSON 422 is documented as an intentional negative check.
 
 - Request: continue checkpoint by checkpoint and stop for approval at each checkpoint.
@@ -550,8 +556,18 @@ Lớp K5 thực hiện Part 3 ở CP6 và deploy trực tiếp agent Part 6 (`06
 - CP5 AI verification: `12/12` criteria and `42/42` checks passed (`PASS 12/12`), Docker image `273 MB` (build 2s cached), `12` valid JSON app log lines, SIGTERM in-flight request 200 with exit code 0, `docker stop` exit code 0 in `1.3s`.
 - CP5 student review and approval: approved by the user; proceeded to CP6.
 
-- CP6 AI work (in progress): read Railway, Render, and Cloud Run YAML/TOML configs (`03-cloud-deployment/` and `06-lab-complete/`); wrote the Railway vs Render comparison and the 4-step Cloud Run CI/CD pipeline summary into `MISSION_ANSWERS.md` Part 3. Checked git remote (`origin` still at base commit `83e677f`, local Part 6 changes not yet pushed) and confirmed no Render CLI is installed locally.
-- CP6 pending user action: commit & push Part 6 + `06-lab-complete/render.yaml` to GitHub, sign in to Render Dashboard and deploy Blueprint `06-lab-complete/render.yaml`, then share the public URL (and keep `AGENT_API_KEY` private) or run the 4 verification curls + capture screenshots.
+- CP6 AI work: read Railway, Render, and Cloud Run configs; wrote the Railway vs Render comparison and the 4-step Cloud Run CI/CD pipeline summary in `MISSION_ANSWERS.md`; scanned for secrets and pushed commit `470b3b9` to `origin/main` for Render Blueprint deployment; after the student deployed Blueprint `exs-dc3v1r17lnhs73eu1k10` and placed the Render-generated `AGENT_API_KEY` into ignored local `.env`, verified all 4 public HTTP checks against `https://day14-agent-1kvy.onrender.com`, saved `screenshots/dashboard.png`, `screenshots/running.png`, and `screenshots/test.png` (verified secret-free), and updated `DEPLOYMENT.md` and `MISSION_ANSWERS.md`.
+- CP6 AI verification: `GET /health` → 200, `GET /ready` → 200 (internal Render Valkey/Redis connected), `POST /ask` without key → 401, `POST /ask` with `X-API-Key` → 200. No secrets printed or committed.
+- CP6 student work: deployed Render Blueprint `day14-lab-agent` (`day14-agent` + `day14-redis`), provided Render screenshots and placed `AGENT_API_KEY` into ignored `.env`.
+- CP6 student review and approval: approved by the user; proceeded to CP7.
+
+- CP7 AI work: copied `BENCHMARK_REPORT_TEMPLATE.md` to `BENCHMARK_REPORT.md` without overwriting; created isolated `06-lab-complete/benchmark-observability/develop/.venv`; ran `load_test.py` (300 requests) on v2 (port 8002) for concurrency 1, 10, 50, 100 and for `MOCK_SLOW_RATE` 0, 0.03, 0.1 (restarting v2 between rates); ran `eval/run_eval.py` on v1 (port 8003 because host port 8001 was occupied by an unrelated service) and v2 (port 8002); added 2 entries (`security-02` JWT/API key and `scaling-03` Kubernetes HPA) to `KNOWLEDGE_BASE` in `develop/utils/mock_llm.py` without touching the golden dataset; restarted v2 and ran final eval with `--min-accuracy 1.0 --baseline reports/eval_v2.json --out reports/eval_v2_fixed.json`; populated Sections 1–3 of `BENCHMARK_REPORT.md` matching all 10 JSON files.
+- CP7 AI verification: all 10 JSON files generated in `06-lab-complete/benchmark-observability/develop/reports/`; SLO violations documented at `c=100` (p95 2626.0 ms) and `MOCK_SLOW_RATE=0.1` (p95 1692.9 ms); eval improved from v1 `1/23` (4.35%) → v2 `21/23` (91.30%) → v2 fixed `23/23` (100.00%, 0 regressions, quality gate PASS). All temporary develop servers stopped.
+- CP7 student review and approval: approved by the user; proceeded to CP8.
+
+- CP8 AI work: added missing `ENV PYTHONUSERBASE=/home/agent/.local` to `06-lab-complete/benchmark-observability/production/Dockerfile` so the non-root `agent` container finds `uvicorn`; started `k5-day14-observability` stack and ran headless Locust (100 users, spawn 10/s, 2m) for both 1-agent and 3-agent configs (`scale_1_stats.csv`, `scale_3_stats.csv`); extracted slow trace (`b99c8be28c21fe786a446de879488701`, slowest span `chat mock-llm-small` `1686.1 ms` / `94.8%`) and error trace (`941451678a70f9e202cd534cbc4d9924`, HTTP 503 `LLMError`) with matching JSON logs; captured `grafana-dashboard.png`, `jaeger-slow-trace.png`, and `jaeger-error-trace.png`; injected faults (`MOCK_ERROR_RATE=0.2`, `MOCK_SLOW_RATE=0.3`, `LLM_MODEL=mock-llm-large`, `docker pause agent-3`), measured exact firing times via Prometheus API (`AgentInstanceDown` 45s after pause, `AgentHighErrorRate` 76s), and captured `prometheus-alert-firing.png` with all 4 alerts firing simultaneously; completed `BENCHMARK_REPORT.md` Sections 4–6; tore down stack (`docker compose -p k5-day14-observability down -v`); copied all 10 JSONs to `reports/` and 2 CSVs to `benchmark-results/` per `SUBMISSION.md`.
+- CP8 AI verification: verified all 3 root Markdown reports, 10 benchmark/eval JSONs, 2 scaling CSVs, 7 required screenshots (secret-free), clean container teardown, and empty `.env` git history.
+- CP8 student review and approval: pending before final commit/push and LMS link submission.
 
 ## Part 6 — Full production readiness check
 

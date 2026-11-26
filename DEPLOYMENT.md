@@ -2,7 +2,7 @@
 
 ## Status
 
-Configuration prepared; cloud deployment and public URL verification are pending.
+Deployed and verified live on Render (Singapore region, Blueprint `day14-lab-agent`, ID `exs-dc3v1r17lnhs73eu1k10`, commit `470b3b9`).
 
 ## Deploy
 
@@ -26,13 +26,25 @@ The Render agent key is generated separately from your local key. No Anthropic k
 
 ## Public URL
 
-Pending deployment.
+- **Agent URL:** `https://day14-agent-1kvy.onrender.com`
+- **Web Service:** `day14-agent` (`srv-dc3v1uqjnfac73b0c8pg`, Docker, Free plan, Singapore)
+- **Key Value (Redis-compatible):** `day14-redis` (Valkey 8, Free plan, Singapore, internal `REDIS_URL`)
 
 ## Verification
 
-Set `BASE` to the deployed URL, then enter the generated key without displaying it:
+Verified on 2026-11-26 against `https://day14-agent-1kvy.onrender.com` (`AGENT_API_KEY` read from ignored `06-lab-complete/.env`, never printed):
+
+| Check | Request | Expected | Actual | Response summary |
+| --- | --- | ---: | ---: | --- |
+| Liveness | `GET /health` | 200 | **200** | `{"status":"ok"}` |
+| Readiness (Redis) | `GET /ready` | 200 | **200** | `{"status":"ready"}` |
+| Missing API key | `POST /ask` (no `X-API-Key`) | 401 | **401** | `{"detail":"Invalid or missing API key"}` |
+| Valid API key | `POST /ask` (`X-API-Key: $AGENT_API_KEY`) | 200 | **200** | Mock answer + `usage` (`input_tokens: 1`, `output_tokens: 17`, `estimated: true`) |
+
+Commands to reproduce without displaying the key:
 
 ```bash
+BASE="https://day14-agent-1kvy.onrender.com"
 read -rsp 'Agent API key: ' AGENT_API_KEY; echo
 export AGENT_API_KEY
 curl -sS -o /dev/null -w '%{http_code}\n' "$BASE/health" # 200
@@ -46,7 +58,11 @@ curl -sS -o /dev/null -w '%{http_code}\n' -X POST "$BASE/ask" \
 
 ## Screenshots
 
-Pending: `screenshots/dashboard.png`, `screenshots/running.png`, `screenshots/test.png`.
+All screenshots inspected to confirm no secrets (`AGENT_API_KEY`, `REDIS_URL`, Sync Hook) are exposed:
+
+- `screenshots/dashboard.png` — Render Blueprint `day14-lab-agent` showing `day14-agent` (Deployed) and `day14-redis` (Available).
+- `screenshots/running.png` — `day14-agent` Web Service live at `https://day14-agent-1kvy.onrender.com` (commit `470b3b9`, Singapore).
+- `screenshots/test.png` — Verification output of the 4 HTTP checks (`200`, `200`, `401`, `200`).
 
 ## Lab limitations
 
